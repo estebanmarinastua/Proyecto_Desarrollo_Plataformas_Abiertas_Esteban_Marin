@@ -1,0 +1,90 @@
+-- a. Creación de la base de datos
+CREATE DATABASE tienda_ropa;
+USE tienda_ropa;
+
+-- b. Creación de tablas
+CREATE TABLE Marcas (
+    id_marca INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Prendas (
+    id_prenda INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_prenda VARCHAR(50) NOT NULL,
+    id_marca INT,
+    precio DECIMAL(10, 2) NOT NULL,
+    stock INT NOT NULL,
+    FOREIGN KEY (id_marca) REFERENCES Marcas(id_marca)
+);
+
+CREATE TABLE Ventas (
+    id_venta INT AUTO_INCREMENT PRIMARY KEY,
+    id_prenda INT,
+    fecha_venta DATE NOT NULL,
+    cantidad INT NOT NULL,
+    FOREIGN KEY (id_prenda) REFERENCES Prendas(id_prenda)
+);
+
+-- d. Inserción de datos ficticios
+INSERT INTO Marcas (nombre) VALUES ('Nike'), ('Adidas'), ('Puma'), ('Zara'), ('H&M');
+
+INSERT INTO Prendas (nombre_prenda, id_marca, precio, stock) 
+VALUES 
+('Camiseta Nike', 1, 25.00, 100),
+('Pantalón Adidas', 2, 40.00, 150),
+('Zapatos Puma', 3, 60.00, 80),
+('Vestido Zara', 4, 75.00, 50),
+('Camisa H&M', 5, 30.00, 200);
+
+INSERT INTO Ventas (id_prenda, fecha_venta, cantidad) 
+VALUES 
+(1, '2024-09-01', 10),
+(2, '2024-09-02', 15),
+(3, '2024-09-03', 5),
+(4, '2024-09-04', 8),
+(5, '2024-09-05', 12);
+
+-- e. Eliminación de un dato (ejemplo: eliminar una prenda)
+DELETE FROM Prendas WHERE id_prenda = 5;
+
+-- f. Actualización de algún dato (ejemplo: actualizar el stock de una prenda)
+UPDATE Prendas SET stock = 120 WHERE id_prenda = 1;
+
+-- g. Consulta de datos
+-- i. Obtener la cantidad vendida de prendas por fecha específica
+SELECT P.nombre_prenda, V.fecha_venta, SUM(V.cantidad) AS total_vendido
+FROM Ventas V
+JOIN Prendas P ON V.id_prenda = P.id_prenda
+WHERE V.fecha_venta = '2024-09-02'
+GROUP BY P.nombre_prenda, V.fecha_venta;
+
+-- h. Creación de vistas
+
+-- i. Lista de todas las marcas que tienen al menos una venta
+CREATE VIEW MarcasConVentas AS
+SELECT DISTINCT M.nombre
+FROM Marcas M
+JOIN Prendas P ON M.id_marca = P.id_marca
+JOIN Ventas V ON P.id_prenda = V.id_prenda;
+
+-- ii. Prendas vendidas y su cantidad restante en stock
+CREATE VIEW PrendasVendidasConStock AS
+SELECT P.nombre_prenda, SUM(V.cantidad) AS total_vendido, P.stock
+FROM Prendas P
+JOIN Ventas V ON P.id_prenda = V.id_prenda
+GROUP BY P.nombre_prenda, P.stock;
+
+-- iii. Listado de las 5 marcas más vendidas y su cantidad de ventas
+CREATE VIEW Top5MarcasMasVendidas AS
+SELECT M.nombre, SUM(V.cantidad) AS total_vendido
+FROM Marcas M
+JOIN Prendas P ON M.id_marca = P.id_marca
+JOIN Ventas V ON P.id_prenda = V.id_prenda
+GROUP BY M.nombre
+ORDER BY total_vendido DESC
+LIMIT 5;
+
+-- Consulta las vistas (opcional)
+SELECT * FROM MarcasConVentas;
+SELECT * FROM PrendasVendidasConStock;
+SELECT * FROM Top5MarcasMasVendidas;
